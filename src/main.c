@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <limits.h>
 #include <sys/types.h>
 #include <sys/shm.h>
 #include <sys/ipc.h>
@@ -11,9 +12,10 @@
 #define true (0==0)
 #define false !true
 
+typedef enum {DEF, WIN, TIE} cond_t;
 char player_symbol(int);
 void draw_board(int *);
-void end_game(int, int);
+void end_game(cond_t, int);
 void free_board(int *);
 void close_pipe(int *);
 void write_move(int *, int);
@@ -27,8 +29,8 @@ int read_move(int *);
 int main(){
 	/* Game data */
 	int current_player = 0;
-	int game_over = -1;
 	int player;
+	cond_t game_over;
 
 	/* Pipe data */
 	int p1_pipe[2], p2_pipe[2];
@@ -40,13 +42,16 @@ int main(){
 	int * board;
 
 	/* Prepare the Board */
-	board = alloc_board();
+	if((board = alloc_board()) == (void *) -1){
+		return EXIT_FAILURE;
+	}
 
 	/* Prepare player processes*/
 	current_player = 1;
 
-	pipe(p1_pipe);
-	pipe(p2_pipe);
+	if((pipe(p1_pipe)) == -1 || (pipe(p2_pipe)) == -1){
+		return EXIT_FAILURE;
+	}
 
 	pid = fork();
 	if(pid == (pid_t) 0){
@@ -57,9 +62,12 @@ int main(){
 		player = 1;
 		my_pipe = p1_pipe;
 		enemy_pipe = p2_pipe;
+	} else {
+		return EXIT_FAILURE;
 	}
 
-	while(game_over < 0){
+	/* The game loop */
+	while(true){
 		int column;
 		int row;
 
@@ -72,7 +80,7 @@ int main(){
 		}
 
 		if(column < 0){
-			game_over = 0;
+			game_over = DEF;
 			break;
 		}
 
@@ -84,25 +92,25 @@ int main(){
 		}
 
 		if(connect_four(board, row, column)){
-			game_over = 1;
+			game_over = WIN;
 			break;
 		} else if(check_tie(board)){
-			game_over = 2;
+			game_over = TIE;
 			break;
 		}
 
 		current_player = current_player % 2 + 1;
 	}
 
+	close_pipe(my_pipe);
+
 	if(player == 2){
-		close_pipe(my_pipe);
 		return EXIT_SUCCESS;
 	}
 
 	draw_board(board);
 	end_game(game_over, current_player);
 	free_board(board);
-	close_pipe(my_pipe);
 	return EXIT_SUCCESS;
 }
 
@@ -112,11 +120,17 @@ int * alloc_board(){
 	int * board;
 	key_t key = ftok("connect-four", 4);
 	int shmid = shmget(key, sizeof(int)*ROWS*COLS, IPC_CREAT|0666);
-	board = (int *) shmat(shmid, 0, 0);
-	for (int i = 0; i < ROWS; i++){
-		for(int j = 0; j < COLS; j++){
-			board[i*COLS + j] = 0;
+	if(shmid >= 0){
+		board = (int *) shmat(shmid, 0, 0);
+		if(board != (void *) -1){
+			for (int i = 0; i < ROWS; i++){
+				for(int j = 0; j < COLS; j++){
+					board[i*COLS + j] = 0;
+				}
+			}
 		}
+	} else {
+		return (void *) -1;
 	}
 	return board;
 }
@@ -150,13 +164,13 @@ char player_symbol(int player){
 	return symbol;
 }
 
-void end_game(int condition, int current_player){
+void end_game(cond_t condition, int current_player){
 	int player = current_player;
 	switch(condition){
-		case 0: printf("Player %d gives up\n", player);
+		case DEF: printf("Player %d gives up\n", player);
 				player = player % 2 + 1;
-		case 1: printf("The winner is player %d (%c)", player, player_symbol(player)); break;
-		case 2: printf("Game is tied"); break;
+		case WIN: printf("The winner is player %d (%c)", player, player_symbol(player)); break;
+		case TIE: printf("Game is tied"); break;
 	}
 	printf(", thanks for playing!\n");
 }
@@ -167,10 +181,14 @@ int get_turn(int * board, int player){
 	do {
 		printf("Player %d's turn, select a column (1-%d): ", player, COLS);
 		int ch;
+		int input = 0;
 		int column;
-		while((ch = getchar()) != '\0' && ch != '\n'){
-			column = ch - '0' - 1;
+
+		while((ch = getchar()) != '\0' && ch != '\n' && input < INT_MAX){
+			input += ch;
 		}
+
+		column = input - '0' - 1;
 		if(column >= 0 && column < COLS){
 			if(board[column] == 0){
 				return column;
@@ -212,10 +230,11 @@ int check_tie(int * board){
 int connect_four(int * board, int row, int col){
 	int count, start_col, start_row;
 	int symbol = board[row*COLS + col];
+
 	//Horizontal
 	count = 0;
 	for(int i = 0; i < COLS; i++){
-		if(board[i*COLS + col] == symbol){
+		if(board[row*COLS + i] == symbol){
 			count++;
 		} else if(count > 0) {
 			break;
