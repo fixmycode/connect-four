@@ -14,23 +14,23 @@ This will create the `connect-four` binary in the current directory. It will als
 
 ## FAQ
 
-### Do I need anything else to run this software?
+#### Do I need anything else to run this software?
 
 This software doesn't have any dependencies besides a C compiler such as `gcc` or `clang`. Make sure to run it on a POSIX compliant environment, like GNU/Linux or Mac OS X, I haven't tested it on Windows.
 
-### Why are you using IPC methods in such a simple game?!
+#### Why are you using IPC methods in such a simple game?!
 
 Don't look at me, this was a requirement put by the assignment I made this for, so I figured a creative way of using pipes and shared memory to fulfill the task. If you want to read a simplier code, go through the commit history of `src/main.c`, I made the whole game before I started to worry about IPC. Some bugs of the older version are fixed in the IPC version though, so be careful.
 
-### I found a bug! can I fix it?
+#### I found a bug! can I fix it?
 
 Sure you can, and after you do that go ahead and make a pull request for everyone's benefit!
 
-### You're a chilean student, you speak spanish, why is everything in english?!
+#### You're a chilean student, you speak spanish, why is everything in english?!
 
 This software was made for academic porpuses, so I figured I could open-source it, and if it's in english that means many more people than just spanish speakers could learn from it. Also, I like to keep the consistency because C keywords are written in english.
 
-### What's your academic info?
+#### What's your academic info?
 
 Name: Pablo Albornoz Navarro  
 Student No. 201073560-5  
