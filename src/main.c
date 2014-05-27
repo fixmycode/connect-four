@@ -123,8 +123,9 @@ int * alloc_board(){
 	if(shmid >= 0){
 		board = (int *) shmat(shmid, 0, 0);
 		if(board != (void *) -1){
-			for (int i = 0; i < ROWS; i++){
-				for(int j = 0; j < COLS; j++){
+			int i, j;
+			for (i = 0; i < ROWS; i++){
+				for(j = 0; j < COLS; j++){
 					board[i*COLS + j] = 0;
 				}
 			}
@@ -141,14 +142,15 @@ void free_board(int * board){
 
 /* Graphic interface */
 void draw_board(int * board){
+	int i, j;
 	putc('\n', stdout);
-	for(int i = 0; i < ROWS; i++){
-		for(int j = 0; j < COLS; j++){
+	for(i = 0; i < ROWS; i++){
+		for(j = 0; j < COLS; j++){
 			putc(player_symbol(board[i*COLS + j]), stdout);
 		}
 		putc('\n', stdout);
 	}
-	for(int j = 0; j < COLS; j++){
+	for(j = 0; j < COLS; j++){
 		putc(49+j, stdout);
 	}
 	printf("\n\n");
@@ -206,7 +208,8 @@ int get_turn(int * board, int player){
 
 /* Player logic */
 int push_token(int * board, int player, int column){
-	for(int i = ROWS-1; i >= 0; i--){
+	int i;
+	for(i = ROWS-1; i >= 0; i--){
 		int position = board[i*COLS + column];
 		if(position == 0){
 			board[i*COLS + column] = player;
@@ -218,8 +221,9 @@ int push_token(int * board, int player, int column){
 
 /* Winning logic */
 int check_tie(int * board){
+	int i;
 	int tied = true;
-	for (int i = 0; i < COLS; i++){
+	for (i = 0; i < COLS; i++){
 		if(board[i] == 0){
 			tied = false;
 		}
@@ -228,12 +232,12 @@ int check_tie(int * board){
 }
 
 int connect_four(int * board, int row, int col){
-	int count, start_col, start_row;
+	int i, dx, count, start_col, start_row;
 	int symbol = board[row*COLS + col];
 
 	//Horizontal
 	count = 0;
-	for(int i = 0; i < COLS; i++){
+	for(i = 0; i < COLS; i++){
 		if(board[row*COLS + i] == symbol){
 			count++;
 		} else if(count > 0) {
@@ -244,7 +248,7 @@ int connect_four(int * board, int row, int col){
 
 	//Vertical
 	count = 0;
-	for(int i = 0; i < ROWS; i++){
+	for(i = 0; i < ROWS; i++){
 		if(board[i*COLS + col] == symbol){
 			count++;
 		} else if(count > 0) {
@@ -262,8 +266,8 @@ int connect_four(int * board, int row, int col){
 		start_col = 0;
 		start_row = row-col;
 	}
-	int dx = 0;
-	for(int i = start_row; i < ROWS; i++){
+	dx = 0;
+	for(i = start_row; i < ROWS; i++){
 		if(start_col+dx >= COLS) break;
 		if(board[i*COLS + (start_col+dx)] == symbol){
 			count++;
@@ -284,7 +288,7 @@ int connect_four(int * board, int row, int col){
 		start_col = row+col-(start_row);
 	}
 	dx = 0;
-	for(int i = start_row; i >= 0; i--){
+	for(i = start_row; i >= 0; i--){
 		if(start_col+dx >= COLS) break;
 		if(board[i*COLS + (start_col+dx)] == symbol){
 			count++;
