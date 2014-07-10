@@ -26,13 +26,3 @@ Don't look at me, this was a requirement put by the assignment I made this for, 
 
 Sure you can, and after you do that go ahead and make a pull request for everyone's benefit!
 
-#### You're a chilean student, you speak spanish, why is everything in english?!
-
-This software was made for academic porpuses, so I figured I could open-source it, and if it's in english that means many more people than just spanish speakers could learn from it. Also, I like to keep the consistency because C keywords are written in english.
-
-#### What's your academic info?
-
-Name: Pablo Albornoz Navarro  
-Student No. 201073560-5  
-Universidad Técnica Federico Santa María.  
-
